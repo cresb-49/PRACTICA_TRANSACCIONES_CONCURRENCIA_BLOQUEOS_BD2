@@ -12,3 +12,14 @@ Pasos para levantar en local
     ```sh
     pip3 install -r requirements.txt
     ```
+
+Script de creacion del docker de MYSQL
+
+1. Creacion del volumen
+    ```sh
+    docker volume create mysql_data
+    ```
+2. Creacion del docker
+    ```sh
+    docker run --name mysql-container -e MYSQL_ROOT_PASSWORD=201931012 -e MYSQL_DATABASE=tcbDB2 -e MYSQL_USER=benjamin -e MYSQL_PASSWORD=201931012 -v mysql_data:/var/lib/mysql -p 3306:3306 -d mysql:latest
+    ```
