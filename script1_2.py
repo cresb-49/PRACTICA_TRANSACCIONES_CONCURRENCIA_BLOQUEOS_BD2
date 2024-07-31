@@ -11,18 +11,15 @@ class MovimientoDB:
             database='Practica'
         )
         self.cursor = self.conn.cursor()
+        self.lock = threading.Lock()
 
     def update_value(self, increment):
-        try:
-            self.cursor.execute("START TRANSACTION")
+        with self.lock:
             self.cursor.execute("SELECT valor FROM Movimiento WHERE id = 1 FOR UPDATE")
             current_value = self.cursor.fetchone()[0]
             new_value = current_value + increment
             self.cursor.execute("UPDATE Movimiento SET valor = %s WHERE id = 1", (new_value,))
             self.conn.commit()
-        except Exception as e:
-            self.conn.rollback()
-            print(f"Transaction failed: {e}")
 
     def close(self):
         self.cursor.close()
