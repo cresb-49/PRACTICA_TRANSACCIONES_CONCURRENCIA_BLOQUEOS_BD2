@@ -35,6 +35,7 @@ class MovimientoDB:
             logging.info("Get exitoso")
             cursor.execute(
                 "UPDATE movimiento SET valor = %s WHERE id = 1", (initial_value,))
+            cursor.execute("COMMIT")
             cursor.execute("SELECT valor FROM movimiento WHERE id = 1")
             current_value = cursor.fetchone()[0]
             logging.info("Valor actual: %s", current_value)
@@ -109,7 +110,7 @@ if __name__ == "__main__":
     duracion = 10  # Duración del experimento
 
     db = MovimientoDB(db_config)
-    # db.test_db_update()
+    db.test_db_update()
     
     logging.info("Iniciando hilos")
 
