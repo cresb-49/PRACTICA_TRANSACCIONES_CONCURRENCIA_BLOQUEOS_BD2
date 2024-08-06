@@ -105,8 +105,8 @@ if __name__ == "__main__":
     # Parámetros
     valor_incremento = 5
     valor_decremento = 3
-    intervalo_incremento = 1  # Segundos de espera de ejecución
-    intervalo_decremento = 2  # Segundos de espera de ejecución
+    intervalo_incremento = 0.01  # Segundos de espera de ejecución
+    intervalo_decremento = 0.01  # Segundos de espera de ejecución
     duracion = 10  # Duración del experimento
 
     db = MovimientoDB(db_config)
