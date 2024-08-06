@@ -51,9 +51,10 @@ class MovimientoDB:
             cursor.execute(
                 "SELECT valor FROM movimiento WHERE id = 1")
             current_value = cursor.fetchone()[0]
-            logging.info("Valor actual: %s", current_value)
+            # logging.info("Valor actual: %s", current_value)
             new_value = current_value + increment
-            logging.info("Nuevo valor: %s", new_value)
+            # logging.info("Nuevo valor: %s", new_value)
+            logging.info("new_value = current_value + increment -> %s = %s + %s", new_value, current_value, increment)
             cursor.execute(
                 "UPDATE movimiento SET valor = %s WHERE id = 1", (new_value,))
             logging.info(
@@ -61,6 +62,15 @@ class MovimientoDB:
             cursor.close()
         except Exception as e:
             logging.error("Error al actualizar el valor: %s", e)
+    
+    def get_final_value(self):
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute("SELECT valor FROM movimiento WHERE id = 1")
+        final_value = cursor.fetchone()[0]
+        cursor.close()
+        conn.close()
+        return final_value
 
 
 def increment(db_config, amount, interval, duration):
@@ -99,7 +109,7 @@ if __name__ == "__main__":
     intervalo_decremento = 2  # Segundos de espera de ejecución
     duracion = 10  # Duración del experimento
 
-    # db = MovimientoDB(db_config)
+    db = MovimientoDB(db_config)
     # db.test_db_update()
     
     logging.info("Iniciando hilos")
@@ -124,3 +134,4 @@ if __name__ == "__main__":
 
     logging.info("Todos los hilos finalizados. Tiempo total de ejecución: %.4f segundos",
                  total_end_time - total_start_time)
+    logging.info("Valor final: %s", db.get_final_value())
