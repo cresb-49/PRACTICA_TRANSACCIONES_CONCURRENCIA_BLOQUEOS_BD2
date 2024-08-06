@@ -1,150 +1,118 @@
-# import threading
-# import time
-# import mysql.connector
-
-# class MovimientoDB:
-#     def __init__(self):
-#         self.conn = mysql.connector.connect(
-#             host='localhost',
-#             user='root',
-#             password='password',
-#             database='Practica'
-#         )
-#         self.cursor = self.conn.cursor()
-
-#     def update_value(self, increment):
-#         try:
-#             self.cursor.execute("START TRANSACTION")
-#             self.cursor.execute("SELECT valor FROM Movimiento WHERE id = 1 FOR UPDATE")
-#             current_value = self.cursor.fetchone()[0]
-#             new_value = current_value + increment
-#             self.cursor.execute("UPDATE Movimiento SET valor = %s WHERE id = 1", (new_value,))
-#             self.conn.commit()
-#         except Exception as e:
-#             self.conn.rollback()
-#             print(f"Transaction failed: {e}")
-
-#     def close(self):
-#         self.cursor.close()
-#         self.conn.close()
-
-# def increment(db, amount, interval, duration):
-#     end_time = time.time() + duration
-#     while time.time() < end_time:
-#         db.update_value(amount)
-#         time.sleep(interval)
-
-# def decrement(db, amount, interval, duration):
-#     end_time = time.time() + duration
-#     while time.time() < end_time:
-#         db.update_value(-amount)
-#         time.sleep(interval)
-
-# if __name__ == "__main__":
-#     db = MovimientoDB()
-
-#     # Parametros
-#     increment_amount = 5
-#     decrement_amount = 3
-#     increment_interval = 1  # seconds
-#     decrement_interval = 2  # seconds
-#     execution_duration = 10  # seconds
-
-#     # Hilos
-#     increment_thread = threading.Thread(target=increment, args=(db, increment_amount, increment_interval, execution_duration))
-#     decrement_thread = threading.Thread(target=decrement, args=(db, decrement_amount, decrement_interval, execution_duration))
-
-#     increment_thread.start()
-#     decrement_thread.start()
-
-#     increment_thread.join()
-#     decrement_thread.join()
-
-#     db.close()
-
 import threading
 import time
 import mysql.connector
 import logging
 
-# Set up logging
+# Configuración de la base de datos
+db_config = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': '201931012',
+    'database': 'tcbDB2',
+    'port': 3306
+}
+
+# Configurar el logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s [%(levelname)s] [%(threadName)s] %(message)s')
 
 
 class MovimientoDB:
-    def __init__(self):
-        self.conn = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='password',
-            database='Practica'
-        )
-        self.cursor=self.conn.cursor()
+    def __init__(self, config):
+        self.config = config
 
-    def update_value(self, increment):
+    def connect(self):
+        return mysql.connector.connect(**self.config)
+    
+    def test_db_update(self, initial_value=0):
         try:
-            logging.info("Starting transaction for increment: %s", increment)
-            start_time=time.time()
-            self.cursor.execute("START TRANSACTION")
-            self.cursor.execute(
-                "SELECT valor FROM Movimiento WHERE id = 1 FOR UPDATE")
-            current_value=self.cursor.fetchone()[0]
-            new_value=current_value + increment
-            self.cursor.execute(
-                "UPDATE Movimiento SET valor = %s WHERE id = 1", (new_value,))
-            self.conn.commit()
-            end_time=time.time()
-            logging.info("Transaction committed. Increment: %s, New Value: %s, Duration: %.4f seconds",
-                         increment, new_value, end_time - start_time)
+            conn = self.connect()
+            cursor = conn.cursor()
+            logging.info("Probando la conexión a la base de datos")
+            cursor.execute("SELECT valor FROM movimiento WHERE id = 1")
+            current_value = cursor.fetchone()[0]
+            logging.info("Valor actual: %s", current_value)
+            logging.info("Get exitoso")
+            cursor.execute(
+                "UPDATE movimiento SET valor = %s WHERE id = 1", (initial_value,))
+            cursor.execute("SELECT valor FROM movimiento WHERE id = 1")
+            current_value = cursor.fetchone()[0]
+            logging.info("Valor actual: %s", current_value)
+            logging.info("Update exitoso")
+            cursor.close()
+            conn.close()
         except Exception as e:
-            self.conn.rollback()
-            logging.error("Transaction failed: %s", e)
+            logging.error("Error al conectar a la base de datos: %s", e)
 
-    def close(self):
-        self.cursor.close()
-        self.conn.close()
+    def update_value(self, conn, increment):
+        try:
+            cursor = conn.cursor()
+            logging.info("Obteniendo el valor actual de la base de datos")
+            cursor.execute("START TRANSACTION")
+            cursor.execute(
+                "SELECT valor FROM movimiento WHERE id = 1 FOR UPDATE")
+            current_value = cursor.fetchone()[0]
+            logging.info("Valor actual: %s", current_value)
+            new_value = current_value + increment
+            logging.info("Nuevo valor: %s", new_value)
+            cursor.execute(
+                "UPDATE movimiento SET valor = %s WHERE id = 1", (new_value,))
+            logging.info(
+                "Valor actualizado. Incremento: %s, Nuevo Valor: %s", increment, new_value)
+            cursor.close()
+        except Exception as e:
+            logging.error("Error al actualizar el valor: %s", e)
 
-def increment(db, amount, interval, duration):
-    logging.info("Increment thread started")
-    start_time=time.time()
-    end_time=start_time + duration
+
+def increment(db_config, amount, interval, duration):
+    logging.info("Hilo de incremento iniciado")
+    conn = mysql.connector.connect(**db_config)
+    start_time = time.time()
+    end_time = start_time + duration
     while time.time() < end_time:
-        db.update_value(amount)
+        db = MovimientoDB(db_config)
+        db.update_value(conn, amount)
         time.sleep(interval)
-    logging.info("Increment thread finished. Duration: %.4f seconds",
+    conn.close()
+    logging.info("Hilo de incremento finalizado. Duración: %.4f segundos",
                  time.time() - start_time)
 
-def decrement(db, amount, interval, duration):
-    logging.info("Decrement thread started")
-    start_time=time.time()
-    end_time=start_time + duration
+
+def decrement(db_config, amount, interval, duration):
+    logging.info("Hilo de decremento iniciado")
+    conn = mysql.connector.connect(**db_config)
+    start_time = time.time()
+    end_time = start_time + duration
     while time.time() < end_time:
-        db.update_value(-amount)
+        db = MovimientoDB(db_config)
+        db.update_value(conn, -amount)
         time.sleep(interval)
-    logging.info("Decrement thread finished. Duration: %.4f seconds",
+    conn.close()
+    logging.info("Hilo de decremento finalizado. Duración: %.4f segundos",
                  time.time() - start_time)
+
 
 if __name__ == "__main__":
-    db=MovimientoDB()
+    # Parámetros
+    valor_incremento = 5
+    valor_decremento = 3
+    intervalo_incremento = 1  # Segundos de espera de ejecución
+    intervalo_decremento = 2  # Segundos de espera de ejecución
+    duracion = 10  # Duración del experimento
 
-    # Parameters
-    increment_amount=5
-    decrement_amount=3
-    increment_interval=1  # seconds
-    decrement_interval=2  # seconds
-    execution_duration=10  # seconds
+    # db = MovimientoDB(db_config)
+    # db.test_db_update()
+    
+    logging.info("Iniciando hilos")
 
-    logging.info("Starting threads")
+    # Hilos de ejecución
+    increment_thread = threading.Thread(target=increment, args=(
+        db_config, valor_incremento, intervalo_incremento, duracion), name="IncrementThread")
+    decrement_thread = threading.Thread(target=decrement, args=(
+        db_config, valor_decremento, intervalo_decremento, duracion), name="DecrementThread")
 
-    # Threads
-    increment_thread=threading.Thread(target=increment, args=(
-        db, increment_amount, increment_interval, execution_duration), name="IncrementThread")
-    decrement_thread=threading.Thread(target=decrement, args=(
-        db, decrement_amount, decrement_interval, execution_duration), name="DecrementThread")
-
-    # Record the start time of the entire operation
-    total_start_time=time.time()
+    # Registrar el tiempo de inicio de toda la operación
+    total_start_time = time.time()
 
     increment_thread.start()
     decrement_thread.start()
@@ -152,10 +120,8 @@ if __name__ == "__main__":
     increment_thread.join()
     decrement_thread.join()
 
-    # Record the end time of the entire operation
-    total_end_time=time.time()
+    # Registrar el tiempo de finalización de toda la operación
+    total_end_time = time.time()
 
-    logging.info("All threads finished. Total execution time: %.4f seconds",
+    logging.info("Todos los hilos finalizados. Tiempo total de ejecución: %.4f segundos",
                  total_end_time - total_start_time)
-
-    db.close()

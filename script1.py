@@ -49,19 +49,17 @@ class MovimientoDB:
             cursor = conn.cursor()
             logging.info("Obteniendo el valor actual de la base de datos")
             cursor.execute(
-                "SELECT valor FROM movimiento WHERE id = 1 FOR UPDATE")
+                "SELECT valor FROM movimiento WHERE id = 1")
             current_value = cursor.fetchone()[0]
             logging.info("Valor actual: %s", current_value)
             new_value = current_value + increment
             logging.info("Nuevo valor: %s", new_value)
             cursor.execute(
                 "UPDATE movimiento SET valor = %s WHERE id = 1", (new_value,))
-            conn.commit()
             logging.info(
                 "Valor actualizado. Incremento: %s, Nuevo Valor: %s", increment, new_value)
             cursor.close()
         except Exception as e:
-            conn.rollback()
             logging.error("Error al actualizar el valor: %s", e)
 
 
@@ -101,6 +99,9 @@ if __name__ == "__main__":
     intervalo_decremento = 2  # Segundos de espera de ejecución
     duracion = 10  # Duración del experimento
 
+    # db = MovimientoDB(db_config)
+    # db.test_db_update()
+    
     logging.info("Iniciando hilos")
 
     # Hilos de ejecución

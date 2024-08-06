@@ -45,7 +45,6 @@ class MovimientoDB:
             logging.info("Nuevo valor: %s", new_value)
             self.cursor.execute(
                 "UPDATE movimiento SET valor = %s WHERE id = 1", (new_value,))
-            self.conn.commit()
             logging.info(
                 "Valor actualizado. Incremento: %s, Nuevo Valor: %s", increment, new_value)
         except Exception as e:
@@ -90,7 +89,7 @@ if __name__ == "__main__":
 
     logging.info("Iniciando hilos")
 
-    # db.test_db_update()
+    db.test_db_update()
 
     # Hilos de ejecución
     increment_thread = threading.Thread(target=increment, args=(
