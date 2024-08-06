@@ -52,9 +52,8 @@ class MovimientoDB:
             cursor.execute(
                 "SELECT valor FROM movimiento WHERE id = 1 FOR UPDATE")
             current_value = cursor.fetchone()[0]
-            logging.info("Valor actual: %s", current_value)
             new_value = current_value + increment
-            logging.info("Nuevo valor: %s", new_value)
+            logging.info("new_value = current_value + increment -> %s = %s + %s", new_value, current_value, increment)
             cursor.execute(
                 "UPDATE movimiento SET valor = %s WHERE id = 1", (new_value,))
             logging.info(
