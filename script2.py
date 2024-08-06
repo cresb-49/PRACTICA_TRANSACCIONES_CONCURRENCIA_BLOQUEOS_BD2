@@ -61,6 +61,15 @@ class MovimientoDB:
             cursor.close()
         except Exception as e:
             logging.error("Error al actualizar el valor: %s", e)
+            
+    def get_final_value(self):
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute("SELECT valor FROM movimiento WHERE id = 1")
+        final_value = cursor.fetchone()[0]
+        cursor.close()
+        conn.close()
+        return final_value
 
 
 def increment(db_config, amount, interval, duration):
@@ -124,3 +133,4 @@ if __name__ == "__main__":
 
     logging.info("Todos los hilos finalizados. Tiempo total de ejecución: %.4f segundos",
                  total_end_time - total_start_time)
+    logging.info("Valor final: %s", MovimientoDB(db_config).get_final_value())
