@@ -1,9 +1,9 @@
 CREATE DATABASE tcbDB2;
 USE tcbDB2;
 
-CREATE TABLE Movimiento (
+CREATE TABLE movimiento (
     id INT AUTO_INCREMENT PRIMARY KEY,
     valor INT NOT NULL
 );
 
-INSERT INTO Movimiento (valor) VALUES (0);
+INSERT INTO movimiento (valor) VALUES (0);
