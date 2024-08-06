@@ -35,6 +35,7 @@ class MovimientoDB:
             logging.info("Get exitoso")
             cursor.execute(
                 "UPDATE movimiento SET valor = %s WHERE id = 1", (initial_value,))
+            cursor.execute("COMMIT")
             cursor.execute("SELECT valor FROM movimiento WHERE id = 1")
             current_value = cursor.fetchone()[0]
             logging.info("Valor actual: %s", current_value)
@@ -56,6 +57,7 @@ class MovimientoDB:
             logging.info("new_value = current_value + increment -> %s = %s + %s", new_value, current_value, increment)
             cursor.execute(
                 "UPDATE movimiento SET valor = %s WHERE id = 1", (new_value,))
+            cursor.execute("COMMIT")
             logging.info(
                 "Valor actualizado. Incremento: %s, Nuevo Valor: %s", increment, new_value)
             cursor.close()
@@ -108,8 +110,8 @@ if __name__ == "__main__":
     intervalo_decremento = 2  # Segundos de espera de ejecución
     duracion = 10  # Duración del experimento
 
-    # db = MovimientoDB(db_config)
-    # db.test_db_update()
+    db = MovimientoDB(db_config)
+    db.test_db_update()
     
     logging.info("Iniciando hilos")
 
